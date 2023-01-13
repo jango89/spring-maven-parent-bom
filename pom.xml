@@ -1,0 +1,288 @@
+<project>
+    <modelVersion>4.0.0</modelVersion>
+ 
+    <distributionManagement>
+        <snapshotRepository>   
+            <id>nexus</id>
+            <url>https://nexus.software.jango.com/repository/Snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>nexus</id>
+            <url>https://nexus.software.jango.com/repository/Releases/</url>
+        </repository>
+    </distributionManagement>
+
+    <!-- Need milestone repository for new spring cloud releases -->
+    <repositories>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+        </repository>
+    </repositories>
+
+    <groupId>com.jango.maven</groupId>
+    <artifactId>parent</artifactId>
+    <version>2.0.4.RC4</version>
+    <packaging>pom</packaging>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.0.4.RELEASE</version>
+    </parent>
+
+    <properties>
+        <spring-cloud.version>Finchley.SR1</spring-cloud.version>
+        <spring-consul.version>2.0.1.RELEASE</spring-consul.version>
+        <sonar-maven-plugin.version>3.7.0.1746</sonar-maven-plugin.version>
+        <spring-amqp.version>2.1.1.RELEASE</spring-amqp.version>
+        <lombok.version>1.18.24</lombok.version>
+        <log4j2.version>2.17.1</log4j2.version>
+        <amazonaws-version>1.11.665</amazonaws-version>
+
+        <!--  JUnit dependency versions -->
+        <junit.version>4.12</junit.version>
+        <junit-vintage-engine>4.12.1</junit-vintage-engine>
+        <junit-jupiter.version>5.0.1</junit-jupiter.version>
+        <junit-platform.version>1.0.1</junit-platform.version>
+
+        <additional-integration-test-directory></additional-integration-test-directory>
+        <additional-unit-test-directory></additional-unit-test-directory>
+        <additional-system-test-directory></additional-system-test-directory>
+        <test-classes-directory>target/test-classes</test-classes-directory>
+    </properties>
+
+    <!-- Optional to child services, use if needed. Only added if mentioned in child pom. Helps child services to be leen and also not manage versions -->
+    <dependencyManagement>
+        <dependencies>
+        
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-consul-dependencies -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-consul-dependencies</artifactId>
+                <version>${spring-consul.version}</version>
+                <type>pom</type>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- Added to all child services inheriting this parent -->
+    <dependencies>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+            <version>${spring-amqp.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-consul-all</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
+            <version>${amazonaws-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-core</artifactId>
+            <version>${amazonaws-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>[3.1,)</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!--JUnit Jupiter API to write and compile tests with JUnit5 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit-jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- JUnit 4 to make legacy JUnit 4 tests compile -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <!-- Plugins available for the child services -->
+        <pluginManagement>
+
+            <plugins>
+                <!-- Sonarqube Plugin to run code quality checks in jenkins-->
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>${sonar-maven-plugin.version}</version>
+                </plugin>
+            </plugins>
+
+        </pluginManagement>
+
+        <plugins>
+            <!-- Add Integration tests, system tests sources and unit test sources to target-->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>add-additional-test-sources</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${additional-integration-test-directory}/java</source>
+                                <source>${additional-system-test-directory}/java</source>
+                                <source>${additional-unit-test-directory}/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- This plugin will help to copy all resources from testing packages to target folder with same permission as source-->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-integration-test-resources</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${test-classes-directory}/integration-test</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${additional-integration-test-directory}/resources</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-system-test-resources</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${test-classes-directory}/system-test</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${additional-system-test-directory}/resources</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-unit-test-resources</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${test-classes-directory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${additional-unit-test-directory}/resources</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Helps to run Integration tests and system tests and additional tests-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.0.0-M7</version>
+            </plugin>
+
+            <!--  Helps to run Unit test -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M6</version>
+                <dependencies>
+                    <!-- JUnit vintage engine to run JUnit 3 or JUnit 4 tests -->
+                    <dependency>
+                        <groupId>org.junit.vintage</groupId>
+                        <artifactId>junit-vintage-engine</artifactId>
+                        <version>${junit-vintage-engine}</version>
+                    </dependency>
+                    <!-- JUnit 5 engine to run JUnit 5 tests -->
+                    <dependency>
+                        <groupId>org.junit.jupiter</groupId>
+                        <artifactId>junit-jupiter-engine</artifactId>
+                        <version>${junit-jupiter.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+        </plugins>
+
+    </build>
+
+</project>
